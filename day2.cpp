@@ -6,45 +6,48 @@
 
 char get_response(char opponent, char fixed_result)
 {
+    if(fixed_result == 'Y')
+    {
+        return opponent;
+    }
+
     // X - I lose
-    // Y - draw 
+    if(fixed_result == 'X')
+    {
+        if(opponent == 'A') return 'C';
+        if(opponent == 'B') return 'A';
+        if(opponent == 'C') return 'B';
+    }
+    
     // Z - I win
+    if(fixed_result == 'Z')
+    {
+        if(opponent == 'A') return 'B';
+        if(opponent == 'B') return 'C';
+        if(opponent == 'C') return 'A';
+    }
 
-
-    // me = rock, 1 point
-    if(opponent == 'A' && me == 'X') return 4; // draw
-    if(opponent == 'B' && me == 'X') return 1; // lose
-    if(opponent == 'C' && me == 'X') return 7; // win
-    
-    // me = paper, 2 points
-    if(opponent == 'A' && me == 'Y') return 8; // win
-    if(opponent == 'B' && me == 'Y') return 5; // draw
-    if(opponent == 'C' && me == 'Y') return 2; // lose
-    
-    //me = scissors, 3 points
-    if(opponent == 'A' && me == 'Z') return 3; //lose
-    if(opponent == 'B' && me == 'Z') return 9; // win
-    if(opponent == 'C' && me == 'Z') return 6; // draw
-
+    return ' ';
 }
 
-int get_result(char opponent, char me)
+int get_result(char opponent, char result)
 {
+    char me = get_response(opponent, result);
 
     // me = rock, 1 point
-    if(opponent == 'A' && me == 'X') return 4; // draw
-    if(opponent == 'B' && me == 'X') return 1; // lose
-    if(opponent == 'C' && me == 'X') return 7; // win
+    if(opponent == 'A' && me == 'A') return 4; // draw
+    if(opponent == 'B' && me == 'A') return 1; // lose
+    if(opponent == 'C' && me == 'A') return 7; // win
     
     // me = paper, 2 points
-    if(opponent == 'A' && me == 'Y') return 8; // win
-    if(opponent == 'B' && me == 'Y') return 5; // draw
-    if(opponent == 'C' && me == 'Y') return 2; // lose
+    if(opponent == 'A' && me == 'B') return 8; // win
+    if(opponent == 'B' && me == 'B') return 5; // draw
+    if(opponent == 'C' && me == 'B') return 2; // lose
     
     //me = scissors, 3 points
-    if(opponent == 'A' && me == 'Z') return 3; //lose
-    if(opponent == 'B' && me == 'Z') return 9; // win
-    if(opponent == 'C' && me == 'Z') return 6; // draw
+    if(opponent == 'A' && me == 'C') return 3; //lose
+    if(opponent == 'B' && me == 'C') return 9; // win
+    if(opponent == 'C' && me == 'C') return 6; // draw
 
     return 0;
 }
