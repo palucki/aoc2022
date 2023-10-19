@@ -17,32 +17,51 @@ int main()
 
     std::string line;
     long result = 0;
+    int group_counter = 0;
+    
+    std::set<char> first, second, third;
+
     while(std::getline(in, line))
     {
-        std::cout << line << "\n";
-        std::string first_part = line.substr(0, line.length()/2);
-        std::string second_part = line.substr(line.length()/2);
-        
-        std::set<char> first_part_set{first_part.begin(), first_part.end()};
-        std::set<char> second_part_set{second_part.begin(), second_part.end()};
-
-        std::string common;
-        std::set_intersection(first_part_set.begin(), first_part_set.end(), 
-                              second_part_set.begin(), second_part_set.end(),
-                              std::back_inserter(common));
-
-        std::cout << "first part " << first_part << " and second " << second_part << " common part " << common << "\n";
-
-        
-        int priority = 0;
-        if(std::isupper(common[0]))
+        if(group_counter == 0)
         {
-            priority += 26;
+            first = {line.begin(), line.end()};
+            group_counter++;
         }
+        else if(group_counter == 1)
+        {
+            second = {line.begin(), line.end()};
+            group_counter++;
+        }
+        else if(group_counter == 2)
+        {
+            third = {line.begin(), line.end()};
 
-        priority += int(std::toupper(common[0]) - 64);
+            std::vector<char> common;
+            std::set_intersection(first.begin(), first.end(), 
+                                  second.begin(), second.end(),
+                                  std::back_inserter(common));
+            second = {common.begin(), common.end()};
 
-        result += priority;
+            std::vector<char> common_2;
+            std::set_intersection(second.begin(), second.end(), 
+                                  third.begin(), third.end(),
+                                  std::back_inserter(common_2));
+
+            std::cout << " common part " << common_2[0] << "\n";
+
+            // perform summary
+            group_counter = 0;
+
+            int priority = 0;
+            if(std::isupper(common_2[0]))
+            {
+                priority += 26;
+            }
+
+            priority += int(std::toupper(common_2[0]) - 64);
+            result += priority;
+        }
     }
 
     std::cout << "result " << result << "\n";
