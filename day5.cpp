@@ -7,6 +7,7 @@
 #include <cctype>
 #include <stack>
 #include <array>
+#include <list>
 
 int main()
 {
@@ -19,7 +20,6 @@ int main()
 
     std::string line;
     std::string result;
-
 
 // [N]         [C]     [Z]            
 // [Q] [G]     [V]     [S]         [V]
@@ -52,20 +52,19 @@ int main()
         std::stringstream ss{line};
         ss >> temp >> how_many >> temp >> from >> temp >> to;
 
+        std::list<char> temp_container;
+
         for(int i = 0; i < how_many; ++i)
         {
             auto moved = stacks[from-1].top();
             stacks[from-1].pop();
-            stacks[to-1].push(moved);
+            temp_container.push_front(moved);
         }
 
-        // std::cout << "boundaries " << a << " " << b << " " << c << " " << d << '\n';
-
-        // bool no_overlap = b < c || a > d;
-        // if(!no_overlap)
-        // {
-        //     result++;
-        // }
+        for(auto c : temp_container)
+        {
+            stacks[to-1].push(c);
+        }
     }
 
     std::cout << "result ";
