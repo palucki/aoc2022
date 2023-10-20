@@ -29,9 +29,10 @@ int main()
 
         std::cout << "boundaries " << a << " " << b << " " << c << " " << d << '\n';
 
-        if((a >= c && b <= d ) || (c>= a && d<= b))
+        bool no_overlap = b < c || a > d;
+        if(!no_overlap)
         {
-            result++;   
+            result++;
         }
     }
 
