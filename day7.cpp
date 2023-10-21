@@ -61,8 +61,14 @@ int main()
         }
     }
 
-    // Add "/"
-    already_traversed.push_back(path[0]);
+    long root_size = path[0].size;
+
+    // Add all from the path
+    for(const auto& d : path)
+    {
+        already_traversed.push_back(d);
+    }
+    // already_traversed.push_back(path[0]);
 
     long result = 0;
     for(const auto & dir : already_traversed)
@@ -75,6 +81,22 @@ int main()
     }
 
     std::cout << "Result " << result << '\n';
+
+    long unused_space = 70000000 - root_size;
+    long need_to_free = 30000000 - unused_space;
+    std::cout << "need to free " << need_to_free << '\n';
+
+    long smallest_dir_size = 70000000;
+
+    for(const auto & dir : already_traversed)
+    {
+        if(dir.size >= need_to_free && dir.size < smallest_dir_size)
+        {
+            smallest_dir_size = dir.size;
+        }
+    }
+
+    std::cout << "Smallest dir size " << smallest_dir_size << '\n';
 
     in.close();
     return 0;
