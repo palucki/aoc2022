@@ -28,6 +28,52 @@ int signum(int val)
     return 0;
 }
 
+Position adapt_tail(Position head, Position tail)
+{
+    auto diff_x = head.first - tail.first;
+    auto diff_y = head.second - tail.second;
+
+    if(std::abs(diff_x) > 1 || abs(diff_y) > 1)
+    {
+        tail.first = tail.first + signum(diff_x);
+        tail.second = tail.second + signum(diff_y);
+    }
+
+    return tail;
+}
+
+std::pair<Position, Position> move(char direction, Position head, Position tail)
+{
+    if(direction == 'R')
+    {
+        head.first += right.first;
+        head.second += right.second;
+    } 
+    else if(direction == 'L')
+    {
+        head.first += left.first;
+        head.second += left.second;
+    }
+    else if(direction == 'D')
+    {
+        head.first += down.first;
+        head.second += down.second;
+    }
+    else if(direction == 'U') 
+    {
+        head.first += up.first;
+        head.second += up.second;
+    }
+    else 
+    {
+        assert(false);
+    }
+
+    tail = adapt_tail(head, tail);
+
+    return std::pair<Position, Position>{head, tail};
+};
+
 int main()
 {
     std::fstream in("day9_input.txt", std::ios::in);
@@ -37,46 +83,19 @@ int main()
         return -1;
     }
 
-    Position head{0,0};
-    Position tail{0,0};
-    std::set<Position> tail_visited{tail};
-
-    auto move = [&head, &tail](char direction){
-        if(direction == 'R')
-        {
-            head.first += right.first;
-            head.second += right.second;
-        } 
-        else if(direction == 'L')
-        {
-            head.first += left.first;
-            head.second += left.second;
-        }
-        else if(direction == 'D')
-        {
-            head.first += down.first;
-            head.second += down.second;
-        }
-        else if(direction == 'U') 
-        {
-            head.first += up.first;
-            head.second += up.second;
-        }
-        else 
-        {
-            assert(false);
-        }
-
-
-        auto diff_x = head.first - tail.first;
-        auto diff_y = head.second - tail.second;
-
-        if(std::abs(diff_x) > 1 || abs(diff_y) > 1)
-        {
-            tail.first = tail.first + signum(diff_x);
-            tail.second = tail.second + signum(diff_y);
-        }
+    std::array<Position, 10> knots{
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0},
+        Position{0,0}
     };
+    std::set<Position> tail_visited{knots[9]};
 
     std::string line;
     int lineno = 0;
@@ -87,12 +106,18 @@ int main()
         int steps;
 
         ss >> direction >> steps;
-        // std::cout << ++lineno << " " << steps << " steps " << tail.first << "," << tail.second << "\n";
         for(int i = 0; i < steps; ++i)
         {
-            move(direction);
+            auto new_positions = move(direction, knots[0], knots[1]);
+            knots[0] = new_positions.first;
+            knots[1] = new_positions.second;
+            for(int k = 1; k < 9; ++k)
+            {
+                auto new_tail = adapt_tail(knots[k], knots[k+1]);
+                knots[k+1] = new_tail;
+            }
 
-            tail_visited.insert(tail);
+            tail_visited.insert(knots[9]);
         }
     }
 
