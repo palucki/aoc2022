@@ -21,14 +21,16 @@ int main()
     bool in_add = false;
     std::string cmd;
     int number;
-    int cycle = 1;
+    int cycle = 0;
     long x = 1;
-    long result = 0;
+
+    using Line = std::array<char, 40>;
+    Line display_line{'.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.'};
+    std::array<Line, 6> display { display_line, display_line, display_line, display_line, display_line, display_line };
+    int line_no = 0;
     
     while(std::getline(in, line))
     {
-        std::cout << "Input " << line << '\n';
-
         int cycles = 0;
         int add_after = -1;
         std::stringstream ss{line};
@@ -38,7 +40,7 @@ int main()
         {
             ss >> number;
             cycles += 2;
-            std::cout << "will add after " << cycle + 1 << '\n';
+            // std::cout << "will add after " << cycle + 1 << '\n';
             add_after = cycle + 1;
         }
         else if (cmd == "noop")
@@ -48,10 +50,11 @@ int main()
 
         while(cycles-- > 0)
         {
-            // during cycle
-            if(cycle == 20 || cycle == 60 || cycle == 100 || cycle == 140 || cycle == 180 || cycle == 220)
+            //pixel rendered pos = cycle - 1
+            int rendering_pos = cycle % 40;
+            if(rendering_pos == x - 1 || rendering_pos == x || rendering_pos == x + 1)
             {
-                result += cycle * x;
+                display[line_no][rendering_pos] = '#';
             }
 
             // after cycle n
@@ -60,12 +63,27 @@ int main()
                 x += number;
             }
 
-            std::cout << "after cycle " << cycle << " value " << x << '\n';
+            std::cout << "rendering at " << line_no << ":" << rendering_pos << " after cycle " << cycle << " value " << x << '\n';
+
+            // during cycle
+            if(cycle == 40 || cycle == 80 || cycle == 120 || cycle == 160 || cycle == 200)
+            {
+                std::cout << "next line\n";
+                line_no++;
+            }
+
             cycle++;
         }
     }
 
-    std::cout << "result " << result << '\n';
+    for(auto line : display)
+    {
+        for(auto c : line)
+        {
+            std::cout << c;
+        }
+        std::cout << '\n';
+    }
 
     in.close();
     return 0;
