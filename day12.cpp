@@ -26,8 +26,8 @@ int main()
         return -1;
     }
 
-    constexpr int num_rows = 5;
-    constexpr int num_cols = 8;
+    constexpr int num_rows = 41;
+    constexpr int num_cols = 83;
     std::array<std::array<char, num_cols>, num_rows> map;
     std::array<std::array<bool, num_cols>, num_rows> visited;
     std::array<std::array<int, num_cols>, num_rows> distance;
