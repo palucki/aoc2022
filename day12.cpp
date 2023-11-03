@@ -33,16 +33,29 @@ int main()
     std::array<std::array<int, num_cols>, num_rows> distance;
     // std::array<std::array<Cell, num_cols>, num_rows> predecessor;
 
-    Cell start, end;
+    const auto init = [&visited, &distance, &num_cols, &num_rows]()
+    {
+        for(int i = 0; i < num_rows; ++i)
+        {
+            for(int j = 0; j < num_cols; ++j)
+            {
+                visited[i][j] = false;
+                distance[i][j] = std::numeric_limits<int>::max();
+            }
+        }
+    };
+
+    std::vector<Cell> starts;
+    Cell end;
 
     std::string line;
     for(int row = 0; std::getline(in, line); ++row)
     {
         for(int col = 0; col < line.size(); ++col)
         {
-            if(line[col] == 'S')
+            if(line[col] == 'S' || line[col] == 'a')
             {
-                start = {row, col};
+                starts.push_back({row, col});
                 map[row][col] = 'a';
             }
             else if(line[col] == 'E')
@@ -54,10 +67,6 @@ int main()
             {
                 map[row][col] = line[col];
             }
-
-            visited[row][col] = false;
-            // predecessor[row][col] = Cell{-1,-1};
-            distance[row][col] = std::numeric_limits<int>::max();
         }
     }
 
@@ -79,49 +88,53 @@ int main()
         return map[current.first][current.second] + 1 >= map[next.first][next.second];
     };
 
-    for(const auto r : map)
+    int min_steps = std::numeric_limits<int>::max();
+    for(const auto& start : starts)
     {
-        for(const auto c : r)
+        std::cout << "Start at " << start.first << " " << start.second << " end at " << end.first << " " << end.second << '\n';
+
+        init();
+        std::list<Cell> queue;
+        Cell down = {1, 0};
+        Cell up = {-1, 0};
+        Cell left = {0, -1};
+        Cell right = {0, 1};
+        Cell current = start;
+        
+        distance[current.first][current.second] = 0;
+        visited[current.first][current.second] = true;
+        queue.push_back(current);
+
+        bool stop = false;
+        while(!queue.empty() && !stop)
         {
-            std::cout << c;
-        }
-        std::cout << '\n';
-    }
+            current = queue.front();
+            queue.pop_front();
 
-    std::cout << "Start at " << start.first << " " << start.second << " end at " << end.first << " " << end.second << '\n';
-
-    std::list<Cell> queue;
-    Cell down = {1, 0};
-    Cell up = {-1, 0};
-    Cell left = {0, -1};
-    Cell right = {0, 1};
-    Cell current = start;
-    
-    distance[current.first][current.second] = 0;
-    visited[current.first][current.second] = true;
-    queue.push_back(current);
-    
-    while(!queue.empty())
-    {
-        current = queue.front();
-        queue.pop_front();
-
-        for(Cell next : {current + right, current + left, current + up, current + down})
-        {
-            if(can_visit(current, next))
+            for(Cell next : {current + right, current + left, current + up, current + down})
             {
-                visited[next.first][next.second] = true;
-                distance[next.first][next.second] = distance[current.first][current.second] + 1;
-                queue.push_back(next);
-
-                if(next == end)
+                if(can_visit(current, next))
                 {
-                    std::cout << "Found end with distance " << distance[next.first][next.second] << '\n';
-                    return 0;
+                    visited[next.first][next.second] = true;
+                    distance[next.first][next.second] = distance[current.first][current.second] + 1;
+                    queue.push_back(next);
+
+                    if(next == end)
+                    {
+                        std::cout << "Found end with distance " << distance[next.first][next.second] << '\n';
+                        stop = true;
+
+                        if(min_steps > distance[next.first][next.second])
+                        {
+                            min_steps = distance[next.first][next.second];
+                        }
+                    }
                 }
             }
         }
     }
     
+    std::cout << "min number of steps " << min_steps << '\n';
+
     return 0;
 }
