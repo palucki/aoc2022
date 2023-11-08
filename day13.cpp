@@ -77,8 +77,65 @@ int compare(Node& lhs, Node& rhs)
     }
 
     //currently possible due to mixed types int vs list
-    std::cout << "IMPOSSIBLE\n";
+    std::cout << "IMPOSSIBLE COMPARE\n";
     return -2;
+}
+
+int parse(Node& current, int index, int level, const std::string& line)
+{
+    std::string num_str;
+    for(int i = index; i < line.size(); ++i)
+    {
+        // std::cout << "idx " << i << " level " << level << '\n';
+        const auto& cl = line[i];
+
+        if(isdigit(cl))
+        {
+            num_str += cl;
+        }
+        else if(cl == '[')
+        {
+            // handle initial call where head node already created
+            if(level == -1)
+            {
+                level++;
+            }
+            else 
+            {
+                current.children.emplace_back(Node{});
+                i = parse(current.children[current.children.size() - 1], i+1, level+1, line);
+            }
+
+            // std::cout << "index after parsing " << i << '\n';
+        }
+        else if(cl == ']')
+        {
+            //go up
+            if(!num_str.empty())
+            {
+                auto val = std::stoi(num_str);
+                // std::cout << "Found number " << val << " level " << level << '\n';
+                num_str.clear();
+
+                current.children.push_back(Node{val});
+            }
+            return i;
+        }
+        else if(cl == ',')
+        {
+            if(!num_str.empty())
+            {
+                auto val = std::stoi(num_str);
+                // std::cout << "Found number " << val << " level " << level << '\n';
+                num_str.clear();
+                current.children.push_back(Node{val});
+            }
+        }
+    }
+
+    // return index
+    std::cout << "IMPOSSIBLE PARSE\n";
+    return -1;
 }
 
 int main()
@@ -90,186 +147,126 @@ int main()
         return -1;
     }
 
-    std::string line, line2;
+    std::string line1, line2;
+    int pair_index = 1;
+    int result = 0;
     
-    while(std::getline(in, line) && std::getline(in, line2))
+    while(std::getline(in, line1) && std::getline(in, line2))
     {
-        // std::cout << "1: " << line << '\n';
-        std::stack<std::vector<int>> left_stack;
-
-        for(const auto c : line)
-        {
-            // if(c == '[')
-            // {
-            //     left_stack.push(std::vector<int>{});
-            //     std::cout << "lists: " << left_stack.size() << '\n';
-            // }
-            // else if(c == ']')
-            // {
-            //     left_stack.pop();
-            // }
-            // else if(c == ',')
-            // {
-
-            // }
-            // else
-            // {
-            //     int number = std::atoi(c);
-            //     left_stack.top().push_back(number);
-            // }
-        }
-
-
+        // std::cout << "1: " << line1 << '\n';
+        Node head1;
+        auto idx = parse(head1, 0, -1, line1);
+        // std::cout << "P: ";
+        // head1.print();
+        // std::cout << '\n';
+        
         // std::cout << "2: " << line2 << '\n';
-
-        // every [ starts a new list 
-        // every , adds another element to the current list (if there is any)
+        Node head2;
+        idx = parse(head2, 0, -1, line2);
+        // std::cout << "P: ";
+        // head2.print();
+        // std::cout << '\n';
         
+        if(compare(head1, head2) == -1)
+        {
+            std::cout << "pair index " << pair_index << '\n';
+            result += pair_index;
+        }
         
-        
+        pair_index++;
         // consume empty line
-        std::getline(in, line);
+        std::getline(in, line1);
     }
 
     in.close();
 
-    // auto compare = [](Node left, Node right){
-    //     auto* left_it = &left.children;
-    //     auto* right_it = &right.children;
-        
+    std::cout << "Result " << result << '\n';
 
-    //     int limit = std::min(left.children.size(), right.children.size());
+    // {
+    //     // [1,1,3,1,1] vs [1,1,5,1,1]
+    //     Node left;
+    //     left.children.push_back(Node{1});
+    //     left.children.push_back(Node{1});
+    //     left.children.push_back(Node{3});
+    //     left.children.push_back(Node{1});
+    //     left.children.push_back(Node{1});
+    //     left.print();
+    //     std::cout << '\n';
 
-    //     if(limit == 0)
-    //     {
-    //         if(left.children.size() < right.children.size()) std::cout << "LEFT IS SMALLER!\n";  
-    //         else std::cout << "RIGHT IS SMALLER!\n";  
-    //     }
+    //     Node right;
+    //     right.children.push_back(Node{1});
+    //     right.children.push_back(Node{1});
+    //     right.children.push_back(Node{3});
+    //     right.children.push_back(Node{1});
+    //     right.children.push_back(Node{1});
+    //     right.print();
+    //     std::cout << '\n';
+    //     std::cout << compare(left, right) << '\n';
+    // }
 
-        // for(int i = 0; i < limit; ++i)
-        // {
-        //     auto& left_data = left.children[i].data;
-        //     auto& right_data = right.children[i].data;
+    // {
+    //     // [] vs [3]
+    //     Node left;
+    //     left.print();
+    //     std::cout << '\n';
 
-        //     std::cout << "L: " << left_data << " R: " << right_data << '\n';
+    //     Node right;
+    //     right.children.push_back(Node{3});
+    //     right.print();
+    //     std::cout << '\n';
+    //     std::cout << compare(left, right) << '\n';
+    // }
 
-        //     if(left_data != -1 && right_data != -1 && left_data != right_data)
-        //     {
-        //         if(left_data < right_data)
-        //             std::cout << "LEFT IS SMALLER!\n";  
-        //         else
-        //             std::cout << "RIGHT IS SMALLER!\n";  
-        //     }
+    // {
+    //     //[9] vs [[8,7,6]]
+    //     Node left;
+    //     left.children.push_back(Node{9}); 
+    //     left.print();
+    //     std::cout << '\n';
 
-        //     if(left_data == -1 && right_data != -1)
-        //     {
-        //         std::cout << "Promoting right to list\n";
-        //     }
+    //     Node right;
+    //     Node subtree;
+    //     subtree.children.push_back(Node{8});
+    //     subtree.children.push_back(Node{7});
+    //     subtree.children.push_back(Node{6});
+    //     right.children.push_back(subtree);
+    //     right.print();
+    //     std::cout << '\n';
+    //     std::cout << compare(left, right) << '\n';
+    // }
 
-        //     if(left_data != -1 && right_data == -1)
-        //     {
-        //         std::cout << "Promoting left to list\n";
-        //         left.children[i].children.push_back(Node{left_data});
-        //         left_data = -1;
-        //         i--;
-        //         continue;
-        //     }
+    // {
+    //     //[9] vs [[8,7,6]]
+    //     Node left;
+    //     left.children.push_back(Node{9}); 
+    //     left.print();
+    //     std::cout << '\n';
 
-        //     if(i == limit - 1 && left.children.size() != right.children.size())
-        //     {
-        //         if(left.children.size() < right.children.size())
-        //             std::cout << "LEFT IS SMALLER!\n";
-        //         else 
-        //             std::cout << "RIGHT IS SMALLER!\n";  
-        //     }
-        // }
-    // };
+    //     Node right;
+    //     Node subtree;
+    //     subtree.children.push_back(Node{8});
+    //     subtree.children.push_back(Node{7});
+    //     subtree.children.push_back(Node{6});
+    //     right.children.push_back(subtree);
+    //     right.print();
+    //     std::cout << '\n';
+    //     std::cout << compare(left, right) << '\n';
+    // }
 
-    {
-        // [1,1,3,1,1] vs [1,1,5,1,1]
-        Node left;
-        left.children.push_back(Node{1});
-        left.children.push_back(Node{1});
-        left.children.push_back(Node{3});
-        left.children.push_back(Node{1});
-        left.children.push_back(Node{1});
-        left.print();
-        std::cout << '\n';
+    // {
+    //     //[[[]]] vs [[]]
+    //     Node left;
+    //     left.children.push_back(Node{});
+    //     left.children[0].children.push_back(Node{});
+    //     left.print(); 
+    //     std::cout << '\n';
 
-        Node right;
-        right.children.push_back(Node{1});
-        right.children.push_back(Node{1});
-        right.children.push_back(Node{3});
-        right.children.push_back(Node{1});
-        right.children.push_back(Node{1});
-        right.print();
-        std::cout << '\n';
-        std::cout << compare(left, right) << '\n';
-    }
-
-    {
-        // [] vs [3]
-        Node left;
-        left.print();
-        std::cout << '\n';
-
-        Node right;
-        right.children.push_back(Node{3});
-        right.print();
-        std::cout << '\n';
-        std::cout << compare(left, right) << '\n';
-    }
-
-    {
-        //[9] vs [[8,7,6]]
-        Node left;
-        left.children.push_back(Node{9}); 
-        left.print();
-        std::cout << '\n';
-
-        Node right;
-        Node subtree;
-        subtree.children.push_back(Node{8});
-        subtree.children.push_back(Node{7});
-        subtree.children.push_back(Node{6});
-        right.children.push_back(subtree);
-        right.print();
-        std::cout << '\n';
-        std::cout << compare(left, right) << '\n';
-    }
-
-    {
-        //[9] vs [[8,7,6]]
-        Node left;
-        left.children.push_back(Node{9}); 
-        left.print();
-        std::cout << '\n';
-
-        Node right;
-        Node subtree;
-        subtree.children.push_back(Node{8});
-        subtree.children.push_back(Node{7});
-        subtree.children.push_back(Node{6});
-        right.children.push_back(subtree);
-        right.print();
-        std::cout << '\n';
-        std::cout << compare(left, right) << '\n';
-    }
-
-    {
-        //[[[]]] vs [[]]
-        Node left;
-        left.children.push_back(Node{});
-        left.children[0].children.push_back(Node{});
-        left.print(); 
-        std::cout << '\n';
-
-        Node right;
-        right.children.push_back(Node{});
-        right.print(); 
-        std::cout << '\n';
-        std::cout << compare(left, right) << '\n';
-    }
+    //     Node right;
+    //     right.children.push_back(Node{});
+    //     right.print(); 
+    //     std::cout << '\n';
+    //     std::cout << compare(left, right) << '\n';
+    // }
 
     return 0;
 }
