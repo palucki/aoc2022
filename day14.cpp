@@ -8,8 +8,12 @@
 #include <list>
 #include <stack>
 
-const int MAP_SIZE = 200;
-const int X_OFFSET = 400;
+const int MAP_SIZE = 500;
+const int X_OFFSET = 300;
+
+// const int MAP_SIZE = 25;
+// const int X_OFFSET = 488;
+const int FLOOR = 165;
 
 using Map = std::array<std::array<char, MAP_SIZE>, MAP_SIZE>;
 
@@ -21,6 +25,11 @@ void init(Map& map)
         {
             n = '.';
         }
+    }
+
+    for(int i = 0; i < MAP_SIZE; ++i)
+    {
+        map[FLOOR][i] = '#';
     }
 }
 
@@ -93,12 +102,10 @@ int main()
     Map map;
 
     init(map);
-    print(map);
 
     std::string line;     
     while(std::getline(in, line))
     {
-        std::cout << "1: " << line << '\n';
         auto res = split(line, "->");
         for(int i = 0; i < res.size() - 1; ++i)
         {
@@ -128,15 +135,15 @@ int main()
     }
     in.close();
 
-    map[0][500-X_OFFSET] = '+';
-    
+    print(map);
+
     int units = 0;
     bool stop=false;
     while(!stop)
     {
         units++;
-        std::pair<int, int> sand_pos{0, 500-X_OFFSET};
-        std::pair<int, int> last_pos;
+        std::pair<int, int> sand_pos{-1, 500-X_OFFSET};
+        std::pair<int, int> last_pos{sand_pos};
 
         bool sand_moves = true;
         while(sand_moves)
@@ -145,17 +152,17 @@ int main()
             if(sand_pos == std::pair<int, int>{-1,-1})
             {
                 sand_moves = false;
-            }
-            else 
-            {
-                if(sand_pos.first > map.size() || sand_pos.second > map[0].size())
+                // std::cout << "Sand rests at " << last_pos.first << "," << last_pos.second << "\n";
+                
+                if(last_pos.first == 0)
                 {
-                    std::cout << "Sand outside map, units: " << units-1 << "\n";
+                    std::cout << "Sand rests at 0\n";
                     stop = true;
                     break;
                 }
-                
-                // std::cout << "New pos " << sand_pos.first << " " << sand_pos.second << '\n';
+            }
+            else 
+            {
                 last_pos = sand_pos;
             }
         }
@@ -164,6 +171,8 @@ int main()
     }
 
     print(map);
+
+    std::cout << "units " << units << '\n';
 
     return 0;
 }
