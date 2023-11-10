@@ -7,6 +7,7 @@
 #include <cctype>
 #include <list>
 #include <stack>
+#include <map>
 
 using Pos = std::pair<long, long>;
 
@@ -15,8 +16,6 @@ struct Sensor
     Pos pos;
     Pos beacon;
 };
-
-bool debug = false;
 
 int main()
 {
@@ -45,63 +44,82 @@ int main()
         Sensor{{867692, 64146},    {1329230, 1133797}},
         Sensor{{3454465, 966419},  {4401794, 2000000}},
         Sensor{{1902550, 2398376}, {2454257, 2594911}}
+
+        // results
+        // 4 for [2754143,3214126] = 4     -> 11016575214126 OK
+        // 4 for [3281893,3687619] = 4
+        // 4 for [3281893,3687620] = 4
     };
 
-    std::set<Pos> visited_positions;
+    const auto LIMIT = 4000000;
+    const auto DEBUG = false;
+
+    std::map<Pos, int> potentially_free_positions;
+
+    auto check_border = [&potentially_free_positions](const Pos& start, const Pos& end, const Pos& move1, const Pos& move2)
+    {
+        auto current = start;
+        while(current != end)
+        {
+            current.first += move1.first;
+            current.second += move1.second;
+
+            if(current.first >= 0 && current.first <= LIMIT && current.second >= 0 && current.second <= LIMIT )   // exclude outside the range
+            {
+                potentially_free_positions[current]++;
+            }
+
+            current.first += move2.first;
+            current.second += move2.second;
+
+            if(current.first >= 0 && current.first <= LIMIT && current.second >= 0 && current.second <= LIMIT )   // exclude outside the range
+            {
+                potentially_free_positions[current]++;
+            }
+        }
+    };
+
     for(const auto& s : sensors)
     {
         // Manhattan distance -> abs sum of coords diffs
         const auto distance = std::abs(s.pos.first - s.beacon.first) + std::abs(s.pos.second - s.beacon.second);
-
-        const auto LINE_NO = 2000000;
-        const auto y_diff = std::abs(s.pos.second - LINE_NO);
-        const auto x_diff = std::abs(distance - y_diff);
         
-        if(debug)
+        if(DEBUG)
         {
-            std::cout << "distance " << distance << '\n';
+            // std::cout << "distance " << distance << '\n';
             std::cout << "position " << s.pos.first << "," << s.pos.second << '\n';
-            std::cout << "beacon " << s.beacon.first << "," << s.beacon.second << '\n';
-            std::cout << "y diff " << y_diff << " x diff " << x_diff << '\n';
-            std::cout << "from " << s.pos.second - x_diff << " to " <<  s.pos.second + x_diff << " " << 2 * x_diff + 1 << '\n';
+            // std::cout << "beacon " << s.beacon.first << "," << s.beacon.second << '\n';
         }
+
+        const auto new_distance = distance + 2; // border, but remember to exclude the "spike" points
         
-        if(y_diff > distance)
-        {
-            if(debug)
-            {
-                std::cout << "not considering sensor\n";
-            }
-            continue;
-        }
+        const Pos move_up = {0, -1};
+        const Pos move_down = {0, 1};
+        const Pos move_left = {-1, 0};
+        const Pos move_right = {1, 0};
 
-        if(debug)
-        {
-            std::cout << "adding " << 2 * x_diff + 1 << '\n';
-        }
+        const Pos left_anchor = {s.pos.first - new_distance, s.pos.second};
+        const Pos right_anchor = {s.pos.first + new_distance, s.pos.second};
+        const Pos top_anchor = {s.pos.first, s.pos.second - new_distance};
+        const Pos bottom_anchor = {s.pos.first, s.pos.second + new_distance};
 
-        for(int x = s.pos.first - x_diff; x <= s.pos.first + x_diff; ++x)
-        {
-            if(!visited_positions.count(Pos{x, LINE_NO}))
-                visited_positions.insert(Pos{x, LINE_NO});
-        }
+        check_border(left_anchor, top_anchor, move_right, move_up);
+        check_border(top_anchor, right_anchor, move_down, move_right);
+        check_border(right_anchor, bottom_anchor, move_left, move_down);
+        check_border(bottom_anchor, left_anchor, move_up, move_left);
+
+        potentially_free_positions[left_anchor]--;
+        potentially_free_positions[right_anchor]--;
+        potentially_free_positions[top_anchor]--;
+        potentially_free_positions[bottom_anchor]--;
     }
 
-    std::cout << "result before removing beacons " << visited_positions.size() << '\n';
-
-    for(const auto& s : sensors)
+    std::cout << "potentially free size : " << potentially_free_positions.size() << '\n';
+    for (const auto& [key, value] : potentially_free_positions)
     {
-        // visited_positions.erase(s.pos);
-        visited_positions.erase(s.beacon);
+        if(value > 3)
+            std::cout << value << " for "<< '[' << key.first << ',' << key.second << "] = " << value << '\n';
     }
-
-    std::cout << "result " << visited_positions.size() << '\n';
-
-    // for(const auto& pos : visited_positions)
-    // {
-    //     std::cout << pos.first << "," << pos.second << " ";
-    // }
-    // std::cout << '\n';
 
     return 0;
 }
