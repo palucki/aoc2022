@@ -8,13 +8,7 @@
 #include <list>
 #include <stack>
 
-const int MAP_SIZE = 50;
-// [y][x]
-const int X_OFFSET = 10;
-const int Y_OFFSET = 10;
-
-using Map = std::array<std::array<char, MAP_SIZE>, MAP_SIZE>;
-using Pos = std::pair<int, int>;
+using Pos = std::pair<long, long>;
 
 struct Sensor 
 {
@@ -22,100 +16,92 @@ struct Sensor
     Pos beacon;
 };
 
-void init(Map& map)
-{
-    for(auto& arr : map)
-    {
-        for(auto& n : arr)
-        {
-            n = '.';
-        }
-    }
-}
-
-void print(const Map& map)
-{
-    int line_no = -Y_OFFSET;
-    for(const auto& arr : map)
-    {
-        std::cout << line_no++ << ":";
-        for(const auto& n : arr)
-        {
-            std::cout << n;
-        }
-        std::cout << '\n';
-    }
-}
+bool debug = false;
 
 int main()
 {
-    Map map;
-
-    init(map);
-
     std::vector<Sensor> sensors {
-        Sensor{{2, 18}, {-2, 15}},
-        Sensor{{9, 16}, {10, 16}},
-        Sensor{{13, 2}, {15, 3}},
-        Sensor{{12, 14}, {10, 16}},
-        Sensor{{10, 20}, {10, 16}},
-        Sensor{{14, 17}, {10, 16}},
-        Sensor{{8, 7}, {2, 10}},
-        Sensor{{2, 0}, {2, 10}},
-        Sensor{{0, 11}, {2, 10}},
-        Sensor{{20, 14}, {25, 17}},
-        Sensor{{17, 20}, {21, 22}},
-        Sensor{{16, 7}, {15, 3}},
-        Sensor{{14, 3}, {15, 3}},
-        Sensor{{20, 1}, {15, 3}}
+        Sensor{{2924811, 3544081}, {3281893, 3687621}},
+        Sensor{{2719183, 2520103}, {2872326, 2415450}},
+        Sensor{{3754787, 3322726}, {3281893, 3687621}},
+        Sensor{{1727202, 1485124}, {1329230, 1133797}},
+        Sensor{{2517008, 2991710}, {2454257, 2594911}},
+        Sensor{{1472321, 3123671}, {2216279, 3414523}},
+        Sensor{{3456453, 3959037}, {3281893, 3687621}},
+        Sensor{{3997648, 2624215}, {4401794, 2000000}},
+        Sensor{{463281, 967584},   {1329230, 1133797}},
+        Sensor{{2395529, 1897869}, {2454257, 2594911}},
+        Sensor{{3094466, 3888307}, {3281893, 3687621}},
+        Sensor{{2737812, 3928154}, {2744537, 4159197}},
+        Sensor{{813538, 3874308},  {2216279, 3414523}},
+        Sensor{{822358, 1997263},  {1329230, 1133797}},
+        Sensor{{3993754, 3951321}, {3281893, 3687621}},
+        Sensor{{2585409, 3541887}, {2216279, 3414523}},
+        Sensor{{3269796, 3730504}, {3281893, 3687621}},
+        Sensor{{3075750, 2873879}, {2872326, 2415450}},
+        Sensor{{1357, 2747918},    {-1077481,3057204}},
+        Sensor{{2256257, 344800},  {1854450, -900998}},
+        Sensor{{2779742, 2308087}, {2872326, 2415450}},
+        Sensor{{867692, 64146},    {1329230, 1133797}},
+        Sensor{{3454465, 966419},  {4401794, 2000000}},
+        Sensor{{1902550, 2398376}, {2454257, 2594911}}
     };
 
-    for(auto& s : sensors)
+    std::set<Pos> visited_positions;
+    for(const auto& s : sensors)
     {
-        s.pos.first += X_OFFSET;
-        s.beacon.first += X_OFFSET;
-
-        s.pos.second += Y_OFFSET;
-        s.beacon.second += Y_OFFSET;
-
         // Manhattan distance -> abs sum of coords diffs
         const auto distance = std::abs(s.pos.first - s.beacon.first) + std::abs(s.pos.second - s.beacon.second);
-        // std::cout << "distance " << distance << '\n';
 
-        for(int y = s.pos.first - distance; y <= s.pos.first + distance; ++y)
+        const auto LINE_NO = 2000000;
+        const auto y_diff = std::abs(s.pos.second - LINE_NO);
+        const auto x_diff = std::abs(distance - y_diff);
+        
+        if(debug)
         {
-            for(int x = s.pos.second - distance; x <= s.pos.second + distance; ++x)
+            std::cout << "distance " << distance << '\n';
+            std::cout << "position " << s.pos.first << "," << s.pos.second << '\n';
+            std::cout << "beacon " << s.beacon.first << "," << s.beacon.second << '\n';
+            std::cout << "y diff " << y_diff << " x diff " << x_diff << '\n';
+            std::cout << "from " << s.pos.second - x_diff << " to " <<  s.pos.second + x_diff << " " << 2 * x_diff + 1 << '\n';
+        }
+        
+        if(y_diff > distance)
+        {
+            if(debug)
             {
-                const auto current_distance = std::abs(s.pos.first - y) + std::abs(s.pos.second - x);
-                if(current_distance <= distance)
-                {
-                    if(x < 0 || y < 0 || x >= map.size() || y >= map.size())
-                    {
-                        std::cout << "Fatal error at " << y << "," << x << ", need bigger map\n";
-                        return -1;
-                    }
-                    map[y][x] = '#';
-                }
-
+                std::cout << "not considering sensor\n";
             }
+            continue;
         }
 
-        map[s.pos.second][s.pos.first] = 'S';
-        map[s.beacon.second][s.beacon.first] = 'B';
-    }
-
-    // print(map);
-    
-    int result = 0;
-    for(int x = 0; x < map.size(); ++x)
-    {
-        if(map[10 + Y_OFFSET][x] == '#')
+        if(debug)
         {
-            result++;
+            std::cout << "adding " << 2 * x_diff + 1 << '\n';
+        }
+
+        for(int x = s.pos.first - x_diff; x <= s.pos.first + x_diff; ++x)
+        {
+            if(!visited_positions.count(Pos{x, LINE_NO}))
+                visited_positions.insert(Pos{x, LINE_NO});
         }
     }
 
-    std::cout << "There are " << result << " occupied positions\n";
+    std::cout << "result before removing beacons " << visited_positions.size() << '\n';
+
+    for(const auto& s : sensors)
+    {
+        // visited_positions.erase(s.pos);
+        visited_positions.erase(s.beacon);
+    }
+
+    std::cout << "result " << visited_positions.size() << '\n';
+
+    // for(const auto& pos : visited_positions)
+    // {
+    //     std::cout << pos.first << "," << pos.second << " ";
+    // }
+    // std::cout << '\n';
 
     return 0;
 }
