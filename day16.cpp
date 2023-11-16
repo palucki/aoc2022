@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <regex>
 
 // trim from start
 static inline std::string &ltrim(std::string &s)
@@ -119,92 +120,67 @@ int pressure(Valve *v, int time_left, std::map<std::pair<std::string, int>, int>
 
 int main()
 {
-    // std::fstream in("day16_input.txt", std::ios::in);
-    // if (!in.is_open())
-    // {
-    //     std::cout << "Could not open file for reading!\n";
-    //     return -1;
-    // }
+    std::fstream in("day16_input.txt", std::ios::in);
+    if (!in.is_open())
+    {
+        std::cout << "Could not open file for reading!\n";
+        return -1;
+    }
 
-    // std::map<std::string, Valve *> valves;
+    std::map<std::string, Valve *> valves;
 
-    // std::string line;
-    // while (std::getline(in, line))
-    // {
-    //     std::cout << line << '\n';
+    std::string line;
+    std::regex e ("Valve ([A-Z]+) has flow rate=([0-9]+); tunnels? leads? to valves? ([A-Z ,]+)");
+    while (std::getline(in, line))
+    {
+        std::cout << line << '\n';
+        std::smatch m;
 
-    //     std::stringstream ss{line};
-    //     std::string tmp, valve, flow_rate, outputs;
+        if(!std::regex_match(line, m, e))
+        {   
+            std::cout << "parsing error\n";
+            return -1;
+        }
 
-    //     ss >> tmp >> valve >> tmp >> tmp >> flow_rate;
-    //     auto res = split(flow_rate, "=");
-    //     flow_rate = res[1].substr(0, res[1].size() - 1);
+        std::string valve_id = m[1];
+        int flow_rate = std::stoi(m[2]);
+        auto outputs = split(m[3], ", ");
+        std::cout << "valve " << valve_id << " flow " << flow_rate << '\n';
+        for(const auto& o : outputs)
+            std::cout << " -> " << o;
+        std::cout << '\n';
+    }
 
-    //     auto single_valve_pos = line.find("leads to valve ");
-    //     if (single_valve_pos == std::string::npos)
-    //     {
-    //         auto multiple_valves_pos = line.find("lead to valves ");
-    //         if (multiple_valves_pos == std::string::npos)
-    //         {
-    //             return -1;
-    //         }
-
-    //         outputs = line.substr(multiple_valves_pos + 15);
-    //     }
-    //     else
-    //     {
-    //         outputs = line.substr(single_valve_pos + 15);
-    //     }
-
-    //     auto out_valves = split(outputs, ",");
-    //     std::cout << valve << " " << flow_rate << "\n";
-
-    //     if (valves.find(valve) != valves.end())
-    //     {
-    //         auto *v = valves[valve];
-    //         v->flow_rate = std::stoi(flow_rate);
-    //         for (auto o : out_valves)
-    //         {
-    //             std::cout << "->" << trim(o) << '\n';
-    //         }
-    //     }
-    //     else 
-    //     {
-    //         Valve *new_v = new Valve{valve, std::stoi(flow_rate)};
-
-    //     }
-    // }
-
-    Valve aa{"AA", 0};
-    Valve bb{"BB", 13};
-    Valve cc{"CC", 2};
-    Valve dd{"DD", 20};
-    Valve ee{"EE", 3};
-    Valve ff{"FF", 0};
-    Valve gg{"GG", 0};
-    Valve hh{"HH", 22};
-    Valve ii{"II", 0};
-    Valve jj{"JJ", 21};
+    // Valve aa{"AA", 0};
+    // Valve bb{"BB", 13};
+    // Valve cc{"CC", 2};
+    // Valve dd{"DD", 20};
+    // Valve ee{"EE", 3};
+    // Valve ff{"FF", 0};
+    // Valve gg{"GG", 0};
+    // Valve hh{"HH", 22};
+    // Valve ii{"II", 0};
+    // Valve jj{"JJ", 21};
 
     // aa.children = {&dd, &bb};
     // bb.children = {&cc, &aa};
     // cc.children = {&dd, &bb};
     // dd.children = {&cc, &aa};
-    aa.children = {&dd, &ii, &bb};
-    bb.children = {&cc, &aa};
-    cc.children = {&dd, &bb};
-    dd.children = {&cc, &aa, &ee};
-    ee.children = {&ff, &dd};
-    ff.children = {&ee, &gg};
-    gg.children = {&ff, &hh};
-    hh.children = {&gg};
-    ii.children = {&aa, &jj};
-    jj.children = {&ii};
+    // aa.children = {&dd, &ii, &bb};
+    // bb.children = {&cc, &aa};
+    // cc.children = {&dd, &bb};
+    // dd.children = {&cc, &aa, &ee};
+    // ee.children = {&ff, &dd};
+    // ff.children = {&ee, &gg};
+    // gg.children = {&ff, &hh};
+    // hh.children = {&gg};
+    // ii.children = {&aa, &jj};
+    // jj.children = {&ii};
 
-    std::map<std::pair<std::string, int>, int> memo;
-    auto res = pressure(&aa, 6, memo);
+    // std::map<std::pair<std::string, int>, int> memo;
+    // auto res = pressure(&aa, 6, memo);
 
-    std::cout << "max pressure: " << res << '\n';
+    // std::cout << "max pressure: " << res << '\n';
 
     return 0;
 }
