@@ -249,9 +249,60 @@ int main()
 
     std::cout << "Possible flow\n";
 
-    auto res = dfs(30, "AA", {});
+    // distances.erase("AA");
 
-    std::cout << "result " << res << "\n";
+    std::cout << "Valves to consider: " << distances.size() << '\n';
+
+    const auto limit = (1 << distances.size()) - 1;
+    
+    std::vector<std::string> list_of_valves;
+    std::transform(distances.cbegin(), distances.cend(), std::back_inserter(list_of_valves),
+                   [](auto it) { return it.first; });
+
+    std::cout << "Valves to consider: " << list_of_valves.size() << '\n';
+
+    std::cout << "Permutations " << limit << '\n';
+
+    int max_with_elephant = 0;
+    for(int i = 0; i < limit / 2; ++i)
+    {
+        std::cout << "Iteration " << i << " out of " << limit/2 << '\n';
+        std::set<std::string> mine_opened;
+        std::set<std::string> elephant_opened;
+        for(int j = 0; j < list_of_valves.size(); ++j)
+        {
+            // std::cout << int((1<<j)) << " " << bool(i & (1<<j) ) <<"\n";
+            if( i & (1<<j) )
+            {
+                mine_opened.insert(list_of_valves[j]);
+            }
+            else
+            {
+                elephant_opened.insert(list_of_valves[j]);
+            }
+        }
+
+
+        std::cout << "mine opened ";
+        for(const auto e : mine_opened)
+        {
+            std::cout << e << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "elephant opened ";
+        for(const auto e : elephant_opened)
+        {
+            std::cout << e << " ";
+        }
+        std::cout << "\n";
+
+        max_with_elephant = std::max(max_with_elephant, dfs(26, "AA", mine_opened) + dfs(26, "AA", elephant_opened));
+
+        std::cout << max_with_elephant << "\n";
+    }
+
+    std::cout << "Max " << max_with_elephant << '\n';
 
     return 0;
 }
