@@ -7,6 +7,7 @@
 #include <sstream>
 #include <map>
 #include <regex>
+#include <queue>
 
 // trim from start
 static inline std::string &ltrim(std::string &s)
@@ -118,6 +119,47 @@ int pressure(Valve *v, int time_left, std::map<std::pair<std::string, int>, int>
 
 }
 
+
+//distances[FROM][TO] 
+std::map<std::string, std::map<std::string, int>> distances;
+std::map<std::string, int> flows;
+
+
+int dfs(int time_left, std::string valve_id, std::set<std::string> opened)
+{
+    int max_so_far = 0;
+    // std::cout << valve_id << " ";
+    // std::cout << "Opening " << valve_id << " open: " << opened.size() << " ";
+    opened.insert(valve_id);
+    // std::cout << "already opened " << opened.size() << " ";
+
+    for(const auto& [neighbor_valve_id, dist_to_valve] : distances[valve_id])
+    {
+        // if already opened, do not consider this candidate
+        if(opened.find(neighbor_valve_id) != opened.end())
+        {
+            // std::cout << '\n';
+            continue;
+        }
+
+        // time remaining after we open the valve 
+        // if not possible to open any valve - skip the computations
+
+        const auto rem_time = time_left - dist_to_valve - 1;
+        if(rem_time < 1)
+        {
+            continue;
+        }
+
+        const auto flow = flows[neighbor_valve_id];
+
+        auto val = flow * rem_time +  dfs(rem_time, neighbor_valve_id, opened);
+        max_so_far = std::max(max_so_far, val);
+    }
+
+    return max_so_far;
+}
+
 int main()
 {
     std::fstream in("day16_input.txt", std::ios::in);
@@ -130,10 +172,13 @@ int main()
     std::map<std::string, Valve *> valves;
 
     std::string line;
-    std::regex e ("Valve ([A-Z]+) has flow rate=([0-9]+); tunnels? leads? to valves? ([A-Z ,]+)");
+    const std::regex e ("Valve ([A-Z]+) has flow rate=([0-9]+); tunnels? leads? to valves? ([A-Z ,]+)");
+
+    std::map<std::string, std::vector<std::string>> tunnels;
+
     while (std::getline(in, line))
     {
-        std::cout << line << '\n';
+        // std::cout << line << '\n';
         std::smatch m;
 
         if(!std::regex_match(line, m, e))
@@ -146,41 +191,67 @@ int main()
         int flow_rate = std::stoi(m[2]);
         auto outputs = split(m[3], ", ");
         std::cout << "valve " << valve_id << " flow " << flow_rate << '\n';
-        for(const auto& o : outputs)
-            std::cout << " -> " << o;
-        std::cout << '\n';
+        flows[valve_id] = flow_rate;
+        tunnels[valve_id] = outputs;
     }
 
-    // Valve aa{"AA", 0};
-    // Valve bb{"BB", 13};
-    // Valve cc{"CC", 2};
-    // Valve dd{"DD", 20};
-    // Valve ee{"EE", 3};
-    // Valve ff{"FF", 0};
-    // Valve gg{"GG", 0};
-    // Valve hh{"HH", 22};
-    // Valve ii{"II", 0};
-    // Valve jj{"JJ", 21};
+    // calculate using BFS shortest paths to for all non-zero flows
+    for (const auto& [valve_id, flow] : flows)
+    {
+        if(flow <= 0 && valve_id != "AA")
+        {
+            continue;
+        }
 
-    // aa.children = {&dd, &bb};
-    // bb.children = {&cc, &aa};
-    // cc.children = {&dd, &bb};
-    // dd.children = {&cc, &aa};
-    // aa.children = {&dd, &ii, &bb};
-    // bb.children = {&cc, &aa};
-    // cc.children = {&dd, &bb};
-    // dd.children = {&cc, &aa, &ee};
-    // ee.children = {&ff, &dd};
-    // ff.children = {&ee, &gg};
-    // gg.children = {&ff, &hh};
-    // hh.children = {&gg};
-    // ii.children = {&aa, &jj};
-    // jj.children = {&ii};
+        std::cout << "BFS for " << valve_id << " with flow " << flow << '\n';
 
-    // std::map<std::pair<std::string, int>, int> memo;
-    // auto res = pressure(&aa, 6, memo);
+        std::set<std::string> visited;
+        std::queue<std::pair<std::string, int>> to_visit;
+        std::map<std::string, int> dist;
 
-    // std::cout << "max pressure: " << res << '\n';
+        visited.insert(valve_id);
+        dist[valve_id] = 1;
+        for(const auto& o : tunnels[valve_id])
+        {
+            to_visit.push({o, dist[valve_id]});
+        }
+        
+        while(!to_visit.empty())
+        {
+            auto current = to_visit.front();
+            auto valve = current.first;
+            auto distance = current.second;
+            visited.insert(valve);
+
+            if(flows[valve] > 0 || valve == "AA")
+                dist[valve] = distance;
+
+            for(const auto& o : tunnels[valve])
+            {
+                if(visited.find(o) == visited.end())
+                    to_visit.push({o, distance + 1});
+            }
+
+            to_visit.pop();
+        }
+
+        dist.erase(valve_id);
+        dist.erase("AA");
+
+        // output results
+        for (const auto& [valve_id, dist] : dist)
+        {
+            std::cout << " to valve " << valve_id << " dist is " << dist << '\n';
+        }
+
+        distances[valve_id] = dist;
+    }
+
+    std::cout << "Possible flow\n";
+
+    auto res = dfs(30, "AA", {});
+
+    std::cout << "result " << res << "\n";
 
     return 0;
 }
