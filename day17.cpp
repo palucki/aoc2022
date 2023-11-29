@@ -69,6 +69,23 @@ struct Shape
         return true;
     }
 
+    bool place(Map& map, int height)
+    {
+        if(height >= HEIGHT)
+        {
+            std::cout << "EXCEEDED HEIGHT\n";
+            return false;
+        }
+
+        for(auto& e : occupied)
+        {
+            e.second += height;
+            map[e.second][e.first] = '#';
+        }
+
+        return true;
+    }
+
     std::vector<Pos> occupied;
 };
 
@@ -95,35 +112,6 @@ void print(const Map& map, int height)
     }
 }
 
-std::pair<int, int> move(std::pair<int, int> current_pos, const Map& map)
-{
-    const auto current_y = current_pos.first;
-    const auto current_x = current_pos.second;
-
-    //down
-    if(current_y+1 >= map.size() || map[current_y+1][current_x] == '.')
-    {
-        // std::cout << "went down\n";
-        return {current_y+1, current_x};
-    }
-    
-    //left 
-    if(current_x-1 < 0 || map[current_y+1][current_x-1] == '.')
-    {
-        // std::cout << "went left\n";
-        return {current_y+1, current_x-1};
-    }
-
-    //right 
-    if(current_x+1 >= map[0].size() || map[current_y+1][current_x+1] == '.')
-    {
-        // std::cout << "went right\n";
-        return {current_y+1, current_x+1};
-    }
-
-    return {-1, -1};
-}
-
 int main()
 {
     std::fstream in("day17_input.txt", std::ios::in);
@@ -145,22 +133,35 @@ int main()
     }
 
     bool stop = false;
-    Shape shape;
-    shape.occupied = {
-        {2, 7},
-        {3, 7},
-        {4, 7},
-        {5, 7}
-    };
+    Shape line{{{2, 0}, {3, 0}, {4, 0}, {5, 0}}};
+    // Shape line{{{2, 0}, {3, 0}, {4, 0}, {5, 0}}};
 
+    int height_so_far = 0;
+    if(!line.place(map, height_so_far + 3))
+    {
+        return -1;
+    }
+
+    int move_number = 0;
     print(map, 10);
 
-    for(int i = 0; i < 10; ++i)
+    while(rock_number < 2022)
     {
-        if(shape.move('<', map))
+        // const auto rock = rocks[rock_number % rocks.size()];
+
+        while(!stop)
         {
-            std::cout << "Can move\n";
+            line.move(sequence[move_number++ % sequence.size()], map);
+
+            if(!line.move('V', map))
+            {
+                std::cout << "Can not move down " << move_number-1 << "\n";
+                stop = true;
+            }
         }
+
+        rock_number++;
+        // std::cout << "After rock " << rock_number << '\n';
     }
 
     print(map, 10);
